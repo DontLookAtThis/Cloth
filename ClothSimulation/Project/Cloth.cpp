@@ -8,7 +8,7 @@
 
 CCloth::CCloth()
 {
-	fVerticeGap = 20.0f;
+	fVerticeGap = 10.0f;
 	IndiceCountC = 0;
 }
 
@@ -24,6 +24,22 @@ void CCloth::BeginPlay()
 void CCloth::Update(float _tick)
 {
 	__super::Update(_tick);
+
+
+	for (unsigned int x = 0; x < m_Nodes.size(); x++)
+	{
+		for (unsigned int y = 0; y < m_Nodes[x].size(); y++)
+		{
+			m_Nodes[x][y]->Update(_tick);
+		}
+	}
+
+	for (auto it : m_links)
+	{
+		it->Update(_tick);
+	}
+
+	ReinitializeVertices();
 }
 
 void CCloth::ResizeCloth(int _width, int _height)
@@ -42,6 +58,20 @@ void CCloth::ResizeCloth(int _width, int _height)
 			m_Nodes[x][y]->SetLocation(glm::vec3(this->GetLocation().x + x * fVerticeGap, this->GetLocation().y + y * fVerticeGap, this->GetLocation().z));
 		}
 	}
+
+	m_Nodes[0][0]->bAnchored = true;
+	m_Nodes[4][0]->bAnchored = true;
+	m_Nodes[9][0]->bAnchored = true;
+	m_Nodes[14][0]->bAnchored = true;
+	m_Nodes[19][0]->bAnchored = true;
+
+	//Bottom
+
+	//m_Nodes[0][19]->bAnchored = true;
+	//m_Nodes[4][19]->bAnchored = true;
+	//m_Nodes[9][19]->bAnchored = true;
+	//m_Nodes[14][19]->bAnchored = true;
+	//m_Nodes[19][19]->bAnchored = true;
 }
 
 void CCloth::ResetNodes()
@@ -86,24 +116,35 @@ void CCloth::InitializeIndices()
 		{
 			indices.push_back(X * m_width + Y);
 			indices.push_back(X * m_width + (Y + 1));
-			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[X][Y], X * m_width + Y)));
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[X][Y + 1])));
 
 			indices.push_back(X * m_width + Y);
 			indices.push_back((X + 1)* m_width + Y);
-			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][Y], X * m_width + Y)));
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][Y])));
+
+			//Crosses
+
+			indices.push_back(X * m_width + Y);
+			indices.push_back((X + 1)* m_width + (Y + 1));
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][(Y + 1)], true)));
+
+			indices.push_back(X * m_width + (Y + 1));
+			indices.push_back((X + 1)* m_width + Y);
+			m_links.push_back((new CClothLink(m_Nodes[X][(Y + 1)], m_Nodes[(X + 1)][Y], true)));
 		}
 	}
+
 	for (int X = 0; X < (m_width - 1); X++)
 	{
 		indices.push_back(((m_height - 1) * m_width) + X);
 		indices.push_back(((m_height - 1) * m_width) + (X + 1));
-		m_links.push_back((new CClothLink(m_Nodes[m_height - 1][X], m_Nodes[m_height - 1][X + 1], ((m_height - 1) * m_width) + X)));
+		m_links.push_back((new CClothLink(m_Nodes[m_height - 1][X], m_Nodes[m_height - 1][X + 1])));
 	}
 	for (int Y = 1; Y < (m_height); Y++)
 	{
 		indices.push_back((Y) * (m_width - 1) + (Y - 1));
 		indices.push_back((Y + 1) * (m_width - 1) + (Y));
-		m_links.push_back((new CClothLink(m_Nodes[Y-1][m_width - 1], m_Nodes[Y][m_width - 1], (Y) * (m_width - 1) + (Y - 1))));
+		m_links.push_back((new CClothLink(m_Nodes[Y-1][m_width - 1], m_Nodes[Y][m_width - 1])));
 	}
 
 	IndiceCountC = indices.size();
@@ -153,6 +194,45 @@ void CCloth::IntializeConnectionsSquares()
 	}
 }
 
+void CCloth::ReinitializeVertices()
+{
+	vertices.clear();
+	for (int X = 0; X < m_width; X++)
+	{
+		for (int Y = 0; Y < m_height; Y++)
+		{
+			vertices.push_back(m_Nodes[X][Y]->GetLocation().x);
+			vertices.push_back(m_Nodes[X][Y]->GetLocation().y);
+			vertices.push_back(m_Nodes[X][Y]->GetLocation().z);
+		}
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, ClothVBO);
+	glBufferData(GL_ARRAY_BUFFER,
+		vertices.size() * sizeof(GLfloat),
+		&vertices[0],
+		GL_DYNAMIC_DRAW);
+}
+
+void CCloth::ReinitializeIndices()
+{
+	indices.clear();
+	for (auto it : m_links)
+	{
+		if (it->bLinkAlive)
+		{
+			indices.push_back(it->m_Point1->GetNodeNum());
+			indices.push_back(it->m_Point2->GetNodeNum());
+		}
+	}
+	IndiceCountC = indices.size();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ClothEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+		indices.size() * sizeof(GLuint),
+		&indices[0],
+		GL_DYNAMIC_DRAW);
+}
+
 void CCloth::RenderCloth()
 {
 	//glClear(GL_COLOR_BUFFER_BIT);
@@ -198,14 +278,14 @@ void CCloth::InitializeRender()
 	glBufferData(GL_ARRAY_BUFFER,
 		vertices.size() * sizeof(GLfloat),
 		&vertices[0],
-		GL_STATIC_DRAW);
+		GL_DYNAMIC_DRAW);
 	//EBO
 	glGenBuffers(1, &ClothEBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ClothEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 		indices.size() * sizeof(GLuint),
 		&indices[0],
-		GL_STATIC_DRAW);
+		GL_DYNAMIC_DRAW);
 
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);

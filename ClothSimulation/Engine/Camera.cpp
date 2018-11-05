@@ -6,12 +6,12 @@ CCamera::CCamera()
 {
 	m_cameraPosition = { 0.0f, 0.0f, 3.0f };
 	m_cameraFacing = { 0.0f, 0.0f, -1.0f };
-	m_cameraNormal = { 0.0f, 1.0f, 0.0f };
+	m_cameraNormal = { 0.0f, -1.0f, 0.0f };
 	m_viewPortWidth = (float)util::SCR_WIDTH;
 	m_viewPortHeight = (float)util::SCR_HEIGHT;
 	m_nearPlane = 0.1f;
-	m_farPlane = 3000.0f;
-	m_fov = 60.0f;
+	m_farPlane = 20000.0f;
+	m_fov = 45.0f;
 	m_cameraType = ECAMERATYPE::PERSPECTIVE;
 }
 
@@ -33,7 +33,7 @@ void CCamera::CalcViewMatrix()
 {
 	m_viewMatrix = glm::lookAt(
 		m_cameraPosition * (float)util::PIXELUNIT, 
-		m_cameraPosition * (float)util::PIXELUNIT + m_cameraFacing,
+		/*m_cameraPosition * (float)util::PIXELUNIT +*/ m_cameraFacing,
 		m_cameraNormal);
 }
 

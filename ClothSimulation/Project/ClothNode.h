@@ -14,8 +14,19 @@ public:
 	int GetNodeNum();
 	void SetNodeNum(int Num);
 	void AddConnectedNode(CClothNode* Node);
+
+	void Wind(float _Force);
+	void ApplyForce(glm::vec3 _Force);
+	float mass = 3.0f;
+
+	glm::vec3 SingleFrameAcceleration;
+	glm::vec3 ConsistentVelocity;
+
+	bool bAnchored;
 private:
 
 	int iNodeNum;
 	std::vector<CClothNode*> ConnectedNodes;
+
+
 };

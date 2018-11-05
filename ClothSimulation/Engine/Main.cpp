@@ -63,10 +63,11 @@ int main(int argc, char **argv)
 
 void InititializeProgram()
 {
-	p_Time->Initialize();
+
 	p_Asset->InitializeAssets();
 	p_SceneMgr->InitializeScenes();
 	CInput::GetInstance()->InitializeInput();
+	p_Time->Initialize();
 	//m_pSound.PlaySound();
 	//cInputMgr->InitializeInput();
 	//CAssetMgr::GetInstance()->InitializeAssets();

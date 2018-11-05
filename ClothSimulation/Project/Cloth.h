@@ -23,13 +23,18 @@ public:
 	void InitializeVertices();
 	void InitializeIndices();
 	void IntializeConnectionsSquares();
+	void ReinitializeVertices();
+	void ReinitializeIndices();
 
 	void RenderCloth();
 	void InitializeRender();
-private:
 
 	std::vector<std::vector<class CClothNode*>> m_Nodes;
 	std::vector<class CClothLink*> m_links;
+
+private:
+
+
 
 	int IndiceCountC;
 	GLuint m_vaoC; // Vertex Array Obj
