@@ -5,7 +5,8 @@
 #include "Engine/GameObject.h"
 #include "Engine/SpriteRender.h"
 #include "Engine/AssetMgr.h"
-
+#include "ClothLink.h"
+#include "ClothNode.h"
 
 #include "Engine/Input.h"
 CPhysicsScene::CPhysicsScene()
@@ -115,6 +116,13 @@ void CPhysicsScene::UpdateScene(float _tick)
 		}
 	}
 
+	if (CInput::GetInstance()->g_cKeyState['k'] == INPUT_FIRST_PRESS)
+	{
+		int random = rand() % cloth->m_links.size();
+
+		cloth->m_links[random]->KillLink();
+		cloth->ReinitializeIndices();
+	}
 
 }
 

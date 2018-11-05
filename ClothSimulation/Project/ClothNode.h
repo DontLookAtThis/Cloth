@@ -17,7 +17,7 @@ public:
 
 	void Wind(float _Force);
 	void ApplyForce(glm::vec3 _Force);
-	float mass = 3.0f;
+	float mass = 1.0f;
 
 	glm::vec3 SingleFrameAcceleration;
 	glm::vec3 ConsistentVelocity;
