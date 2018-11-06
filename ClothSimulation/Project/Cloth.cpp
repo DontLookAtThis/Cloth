@@ -40,6 +40,7 @@ void CCloth::Update(float _tick)
 	}
 
 	ReinitializeVertices();
+	ReinitializeIndices();
 }
 
 void CCloth::ResizeCloth(int _width, int _height)
@@ -54,24 +55,11 @@ void CCloth::ResizeCloth(int _width, int _height)
 		for (unsigned int y = 0; y < m_Nodes[x].size(); y++)
 		{
 			m_Nodes[x][y] = new CClothNode();
-			m_Nodes[x][y]->SetNodeNum((m_Nodes.size() * x) + y);
+			m_Nodes[x][y]->SetNodeNum((m_Nodes.size() * y) + x);
 			m_Nodes[x][y]->SetLocation(glm::vec3(this->GetLocation().x + x * fVerticeGap, this->GetLocation().y + y * fVerticeGap, this->GetLocation().z));
 		}
 	}
 
-	m_Nodes[0][0]->bAnchored = true;
-	m_Nodes[4][0]->bAnchored = true;
-	m_Nodes[9][0]->bAnchored = true;
-	m_Nodes[14][0]->bAnchored = true;
-	m_Nodes[19][0]->bAnchored = true;
-
-	//Bottom
-
-	//m_Nodes[0][19]->bAnchored = true;
-	//m_Nodes[4][19]->bAnchored = true;
-	//m_Nodes[9][19]->bAnchored = true;
-	//m_Nodes[14][19]->bAnchored = true;
-	//m_Nodes[19][19]->bAnchored = true;
 }
 
 void CCloth::ResetNodes()
@@ -85,10 +73,24 @@ void CCloth::ResetNodes()
 				delete it2;
 			}
 			it.clear();
-			delete &it;
 		}
 		m_Nodes.clear();
 	}
+
+	if (!m_links.empty())
+	{
+		for (auto it : m_links)
+		{
+			delete it;
+		}
+		m_links.clear();
+	}
+
+	if (!m_AnchoredNodes.empty())
+	{
+		m_AnchoredNodes.clear();
+	}
+
 	IndiceCountC = 0;
 	m_width = 0;
 	m_height = 0;
@@ -96,9 +98,9 @@ void CCloth::ResetNodes()
 
 void CCloth::InitializeVertices()
 {
-	for (int X = 0; X < m_width; X++)
+	for (int X = 0; X < m_Nodes.size(); X++)
 	{
-		for (int Y = 0; Y < m_height; Y++)
+		for (int Y = 0; Y < m_Nodes[X].size(); Y++)
 		{
 			vertices.push_back(m_Nodes[X][Y]->GetLocation().x);
 			vertices.push_back(m_Nodes[X][Y]->GetLocation().y);
@@ -110,42 +112,45 @@ void CCloth::InitializeVertices()
 void CCloth::InitializeIndices()
 {
 	int IndicePos = 0;
-	for (int X = 0; X < (m_width -1); X++)
+	for (int X = 0; X < (m_Nodes.size() -1); X++)
 	{
-		for (int Y = 0; Y < (m_height -1); Y++)
+		for (int Y = 0; Y < (m_Nodes[X].size() -1); Y++)
 		{
-			indices.push_back(X * m_width + Y);
-			indices.push_back(X * m_width + (Y + 1));
-			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[X][Y + 1])));
+			//indices.push_back(X * m_width + Y);
+			//indices.push_back(X * m_width + (Y + 1));
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[X][Y + 1], this)));
 
-			indices.push_back(X * m_width + Y);
-			indices.push_back((X + 1)* m_width + Y);
-			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][Y])));
+			//indices.push_back(X * m_width + Y);
+			//indices.push_back((X + 1)* m_width + Y);
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][Y], this)));
 
 			//Crosses
 
-			indices.push_back(X * m_width + Y);
-			indices.push_back((X + 1)* m_width + (Y + 1));
-			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][(Y + 1)], true)));
+			//indices.push_back(X * m_width + Y);
+			//indices.push_back((X + 1)* m_width + (Y + 1));
+			m_links.push_back((new CClothLink(m_Nodes[X][Y], m_Nodes[(X + 1)][(Y + 1)], true, this)));
 
-			indices.push_back(X * m_width + (Y + 1));
-			indices.push_back((X + 1)* m_width + Y);
-			m_links.push_back((new CClothLink(m_Nodes[X][(Y + 1)], m_Nodes[(X + 1)][Y], true)));
+			//indices.push_back(X * m_width + (Y + 1));
+			//indices.push_back((X + 1)* m_width + Y);
+			m_links.push_back((new CClothLink(m_Nodes[X][(Y + 1)], m_Nodes[(X + 1)][Y], true, this)));
 		}
 	}
 
+	for (int Y = 0; Y < (m_height - 1); Y++)
+	{
+		//indices.push_back((Y + 1)* (m_width - 1) + Y);
+		//indices.push_back((Y + 2) * (m_width - 1) + (Y + 1));
+
+		m_links.push_back((new CClothLink(m_Nodes[m_width - 1][Y], m_Nodes[m_width - 1][Y + 1], this)));
+	}
 	for (int X = 0; X < (m_width - 1); X++)
 	{
-		indices.push_back(((m_height - 1) * m_width) + X);
-		indices.push_back(((m_height - 1) * m_width) + (X + 1));
-		m_links.push_back((new CClothLink(m_Nodes[m_height - 1][X], m_Nodes[m_height - 1][X + 1])));
+		//indices.push_back((m_height *(m_width - 1) + m_height - 1) + X);
+		//indices.push_back((m_height *(m_width - 1) + m_height - 1) + X + 1);
+		m_links.push_back((new CClothLink(m_Nodes[X][m_height - 1], m_Nodes[X +1][m_height - 1],this)));
 	}
-	for (int Y = 1; Y < (m_height); Y++)
-	{
-		indices.push_back((Y) * (m_width - 1) + (Y - 1));
-		indices.push_back((Y + 1) * (m_width - 1) + (Y));
-		m_links.push_back((new CClothLink(m_Nodes[Y-1][m_width - 1], m_Nodes[Y][m_width - 1])));
-	}
+
+	ReinitializeIndices();
 
 	IndiceCountC = indices.size();
 }
@@ -197,9 +202,9 @@ void CCloth::IntializeConnectionsSquares()
 void CCloth::ReinitializeVertices()
 {
 	vertices.clear();
-	for (int X = 0; X < m_width; X++)
+	for (int Y = 0; Y < m_height; Y++)
 	{
-		for (int Y = 0; Y < m_height; Y++)
+		for (int X = 0; X < m_width; X++)
 		{
 			vertices.push_back(m_Nodes[X][Y]->GetLocation().x);
 			vertices.push_back(m_Nodes[X][Y]->GetLocation().y);
@@ -211,7 +216,7 @@ void CCloth::ReinitializeVertices()
 	glBufferData(GL_ARRAY_BUFFER,
 		vertices.size() * sizeof(GLfloat),
 		&vertices[0],
-		GL_DYNAMIC_DRAW);
+		GL_STATIC_DRAW);
 }
 
 void CCloth::ReinitializeIndices()
@@ -226,11 +231,12 @@ void CCloth::ReinitializeIndices()
 		}
 	}
 	IndiceCountC = indices.size();
+	std::cout << IndiceCountC << std::endl;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ClothEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 		indices.size() * sizeof(GLuint),
 		&indices[0],
-		GL_DYNAMIC_DRAW);
+		GL_STATIC_DRAW);
 }
 
 void CCloth::RenderCloth()
@@ -256,7 +262,7 @@ void CCloth::RenderCloth()
 	glUniformMatrix4fv(MVPLoc, 1, GL_FALSE, glm::value_ptr(MVP));
 
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT, GL_LINE);
 	glBindVertexArray(ClothVAO);
 	glDrawElements(GL_LINES, IndiceCountC, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -278,16 +284,120 @@ void CCloth::InitializeRender()
 	glBufferData(GL_ARRAY_BUFFER,
 		vertices.size() * sizeof(GLfloat),
 		&vertices[0],
-		GL_DYNAMIC_DRAW);
+		GL_STATIC_DRAW);
 	//EBO
 	glGenBuffers(1, &ClothEBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ClothEBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 		indices.size() * sizeof(GLuint),
 		&indices[0],
-		GL_DYNAMIC_DRAW);
+		GL_STATIC_DRAW);
 
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
+}
+
+void CCloth::AnchorTop()
+{
+	if (m_Nodes.empty())return;
+	for (auto it : m_Nodes)
+	{
+		it[0]->bAnchored = true;
+		iAnchorPointCount = m_Nodes.size();
+		m_AnchoredNodes.push_back(it[0]);
+	}
+}
+
+void CCloth::ReduceAnchorPoints()
+{
+	if (iAnchorPointCount <= 1)
+	{
+		return;
+	}
+
+	int width = m_width;
+	int height = m_height;
+	ResetNodes();
+	ResizeCloth(width, height);
+	InitializeVertices();
+	InitializeIndices();
+	IntializeConnectionsSquares();
+	InitializeRender();
+	ReinitializeIndices();
+
+	iAnchorPointCount = iAnchorPointCount / 2;
+
+	for (auto it : m_AnchoredNodes)
+	{
+		it->bAnchored = false;
+	}
+
+	int AnchorGap = m_width / iAnchorPointCount;
+	int counter = 0;
+	m_AnchoredNodes.clear();
+	for (auto it : m_Nodes)
+	{
+		if (counter % AnchorGap == 0)
+		{
+			it[0]->bAnchored = true;
+			iAnchorPointCount = m_Nodes.size();
+			m_AnchoredNodes.push_back(it[0]);
+		}
+		counter++;
+	}
+	m_Nodes[m_Nodes.size() - 1][0]->bAnchored = true;
+	m_AnchoredNodes.push_back(m_Nodes[m_Nodes.size() - 1][0]);
+	iAnchorPointCount = m_AnchoredNodes.size();
+}
+
+void CCloth::InCreaseAnchorPoints()
+{
+	if (iAnchorPointCount >= m_width) return;
+
+	int width = m_width;
+	int height = m_height;
+	ResetNodes();
+	ResizeCloth(width, height);
+	InitializeVertices();
+	InitializeIndices();
+	IntializeConnectionsSquares();
+	InitializeRender();
+	ReinitializeIndices();
+
+	for (auto it : m_AnchoredNodes)
+	{
+		it->bAnchored = false;
+	}
+
+	iAnchorPointCount *= 2;
+	if (iAnchorPointCount >= m_width)
+	{
+		iAnchorPointCount = m_width;
+		m_AnchoredNodes.clear();
+		for (auto it : m_Nodes)
+		{
+			it[0]->bAnchored = true;
+			iAnchorPointCount = m_Nodes.size();
+			m_AnchoredNodes.push_back(it[0]);
+		}
+		return;
+	}
+
+	int AnchorGap = m_width / iAnchorPointCount;
+	int counter = 0;
+	m_AnchoredNodes.clear();
+	for (auto it : m_Nodes)
+	{
+		if (counter % AnchorGap == 0)
+		{
+			it[0]->bAnchored = true;
+			iAnchorPointCount = m_Nodes.size();
+			m_AnchoredNodes.push_back(it[0]);
+		}
+		counter++;
+	}
+	m_Nodes[m_Nodes.size() - 1][0]->bAnchored = true;
+	m_AnchoredNodes.push_back(m_Nodes[m_Nodes.size() - 1][0]);
+	iAnchorPointCount = m_AnchoredNodes.size();
 }

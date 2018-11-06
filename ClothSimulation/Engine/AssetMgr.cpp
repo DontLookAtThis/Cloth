@@ -37,6 +37,7 @@ void CAssetMgr::InitializeAssets()
 	CreateProgram("DefaultTextPrograrm", "Engine/Shaders/Text.vs", "Engine/Shaders/Text.fs");
 	CreateProgram("ClothProgram", "Engine/Shaders/Cloth.vs", "Engine/Shaders/Cloth.fs");
 	CreateProgram("TerrainProgram", "Engine/Shaders/Terrain.vs", "Engine/Shaders/Terrain.fs");
+	CreateProgram("SphereProgram", "Engine/Shaders/Sphere.vs", "Engine/Shaders/Sphere.fs");
 	/** Initialize Sprites */
 	CreateSprite("DefaultSprite", "Resources/Sprites/DefaultSprite.png");
 	CreateSprite("Triangle", "Resources/Sprites/Player2.png");

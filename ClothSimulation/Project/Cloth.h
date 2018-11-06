@@ -29,9 +29,18 @@ public:
 	void RenderCloth();
 	void InitializeRender();
 
+	void AnchorTop();
+	void ReduceAnchorPoints();
+	void InCreaseAnchorPoints();
+
 	std::vector<std::vector<class CClothNode*>> m_Nodes;
 	std::vector<class CClothLink*> m_links;
 
+	std::vector<class CClothNode*> m_AnchoredNodes;
+	int m_width;
+	int m_height;
+
+	int iAnchorPointCount;
 private:
 
 
@@ -44,8 +53,7 @@ private:
 
 	float fVerticeGap;
 
-	int m_width;
-	int m_height;
+
 
 	GLuint ClothVBO;
 	GLuint ClothVAO;

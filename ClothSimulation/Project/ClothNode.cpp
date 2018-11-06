@@ -20,8 +20,6 @@ void CClothNode::Update(float _tick)
 {
 	__super::Update(_tick);
 
-
-
 	if (bAnchored) return;
 
 	//float grav = 9.8f *  CTime::GetInstance()->GetDeltaTime();
@@ -31,7 +29,7 @@ void CClothNode::Update(float _tick)
 	float randWind = float((rand() % (constWind * 100))) / 100.0f;
 
 	//Wind(randWind);
-	ApplyForce((glm::vec3(0.0f, 9.8f * mass, 0.0f))); //* CTime::GetInstance()->GetDeltaTime()));
+	ApplyForce((glm::vec3(0.0f, 5.0f * mass, 0.0f))); //* CTime::GetInstance()->GetDeltaTime()));
 	SingleFrameAcceleration -= ConsistentVelocity * 0.9f / mass;
 
 
@@ -45,6 +43,11 @@ void CClothNode::Update(float _tick)
 	if (iNodeNum == 0)
 	{
 		std::cout << ConsistentVelocity.y << std::endl;
+	}
+
+	if (GetLocation().y >= (fGroundY * util::PIXELUNIT))
+	{
+		m_transform.position.y = fGroundY * util::PIXELUNIT;
 	}
 }
 

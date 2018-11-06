@@ -28,5 +28,5 @@ private:
 	int iNodeNum;
 	std::vector<CClothNode*> ConnectedNodes;
 
-
+	float fGroundY = 10.0f;
 };
